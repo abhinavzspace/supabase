@@ -6,9 +6,30 @@
 
 name: supabase
 version: "3.8"
+
+networks:
+  supa-network:
+    external: true
+
 services:
+  # nginx:
+  #   image: "jc21/nginx-proxy-manager:latest"
+  #   restart: unless-stopped
+  #   ports:
+  #     # These ports are in format <host-port>:<container-port>
+  #     - "80:80" # Public HTTP Port
+  #     - "443:443" # Public HTTPS Port
+  #     - "81:81" # Admin Web Port
+  #   volumes:
+  #     - ./nginx-data:/data
+  #     - ./nginx-letsencrypt:/etc/letsencrypt
+  #     - ./nginx-snippets:/snippets:ro
+  #   environment:
+  #     TZ: "Asia/Kolkata" # Specify a timezone to use Etc/UTC by default
 
   studio:
+    networks:
+      - supa-network
     container_name: supabase-studio
     image: supabase/studio:20231023-7e2cd92
     restart: unless-stopped
@@ -42,19 +63,21 @@ services:
       LOGFLARE_URL: http://analytics:4000
       NEXT_PUBLIC_ENABLE_LOGS: true
       # Comment to use Big Query backend for analytics
-      NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
+      # NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
       # Uncomment to use Big Query backend for analytics
-      # NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
+      NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
 
   kong:
+    networks:
+      - supa-network
     container_name: supabase-kong
     image: kong:2.8.1
     restart: unless-stopped
     # https://unix.stackexchange.com/a/294837
     entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
-    ports:
-      - ${KONG_HTTP_PORT}:8000/tcp
-      - ${KONG_HTTPS_PORT}:8443/tcp
+    # ports:
+    #   - ${KONG_HTTP_PORT}:8000/tcp
+    #   - ${KONG_HTTPS_PORT}:8443/tcp
     depends_on:
       analytics:
         condition: service_healthy
@@ -225,14 +248,27 @@ services:
       PGRST_JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       FILE_SIZE_LIMIT: 52428800
-      STORAGE_BACKEND: file
-      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      # STORAGE_BACKEND: file
+      # FILE_STORAGE_BACKEND_PATH: /var/lib/storage
       TENANT_ID: stub
       # TODO: https://github.com/supabase/storage-api/issues/55
-      REGION: stub
-      GLOBAL_S3_BUCKET: stub
+      # REGION: stub
+      # GLOBAL_S3_BUCKET: stub
       ENABLE_IMAGE_TRANSFORMATION: "true"
       IMGPROXY_URL: http://imgproxy:5001
+
+      # ...other definitions
+      STORAGE_BACKEND: s3
+      GLOBAL_S3_BUCKET: supabase
+      GLOBAL_S3_ENDPOINT: https://minio1.supa.abhnv.xyz
+      GLOBAL_S3_PROTOCOL: https
+      REGION: asia-south2 #whatever your region is
+      AWS_DEFAULT_REGION: asia-south2
+
+      #this next one seems important for minio
+      GLOBAL_S3_FORCE_PATH_STYLE: true
+      AWS_ACCESS_KEY_ID: rNQ0DpLQ5DAgGhVCQ44Y
+      AWS_SECRET_ACCESS_KEY: is8Xpvk9u9wN8GbCqfB3ANQdHsKZepHVwklOe5vs
     volumes:
       - ./volumes/storage:/var/lib/storage:z
 
@@ -306,11 +342,11 @@ services:
         # Disable this if you are using an external Postgres database
         condition: service_healthy
     # Uncomment to use Big Query backend for analytics
-    # volumes:
-    #   - type: bind
-    #     source: ${PWD}/gcloud.json
-    #     target: /opt/app/rel/logflare/bin/gcloud.json
-    #     read_only: true
+    volumes:
+      - type: bind
+        source: ${PWD}/gcloud.json
+        target: /opt/app/rel/logflare/bin/gcloud.json
+        read_only: true
     environment:
       LOGFLARE_NODE_HOST:  127.0.0.1
       DB_USERNAME: supabase_admin
@@ -326,21 +362,21 @@ services:
       RELEASE_COOKIE: cookie
 
       # Comment variables to use Big Query backend for analytics
-      POSTGRES_BACKEND_URL: postgresql://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-      POSTGRES_BACKEND_SCHEMA: _analytics
-      LOGFLARE_FEATURE_FLAG_OVERRIDE: multibackend=true
+      # POSTGRES_BACKEND_URL: postgresql://supabase_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      # POSTGRES_BACKEND_SCHEMA: _analytics
+      # LOGFLARE_FEATURE_FLAG_OVERRIDE: multibackend=true
 
       # Uncomment to use Big Query backend for analytics
-      # GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
-      # GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER}
+      GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
+      GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER}
     ports:
       - 4000:4000
     entrypoint: |
-                  sh -c `cat <<'EOF' > run.sh && sh run.sh
-                  ./logflare eval Logflare.Release.migrate
-                  ./logflare start --sname logflare
-                  EOF
-                  `
+      sh -c `cat <<'EOF' > run.sh && sh run.sh
+      ./logflare eval Logflare.Release.migrate
+      ./logflare start --sname logflare
+      EOF
+      `
 
   # Comment out everything below this point if you are using an external Postgres database
   db:
