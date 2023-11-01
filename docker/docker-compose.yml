@@ -329,6 +329,8 @@ services:
       - /home/deno/functions/main
 
   analytics:
+    networks:
+      - supa-network
     container_name: supabase-analytics
     image: supabase/logflare:1.4.0
     healthcheck:
