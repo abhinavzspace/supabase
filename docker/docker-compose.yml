@@ -267,8 +267,8 @@ services:
 
       #this next one seems important for minio
       GLOBAL_S3_FORCE_PATH_STYLE: true
-      AWS_ACCESS_KEY_ID: rNQ0DpLQ5DAgGhVCQ44Y
-      AWS_SECRET_ACCESS_KEY: is8Xpvk9u9wN8GbCqfB3ANQdHsKZepHVwklOe5vs
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     volumes:
       - ./volumes/storage:/var/lib/storage:z
 
