@@ -5,4 +5,7 @@ This is a minimal Docker Compose setup for self-hosting Supabase. Follow the ste
 
 # DEPLOYMENT STEPS
 
-`docker network create minio-network && docker network create supa-network`
+- paste secret keys from minio to .env local.
+- `touch .env` on server.
+- copy content from local .env to .env prod.
+- paste LOGFLARE_API_KEY in .env and ./volumes/logs/vector.yml
