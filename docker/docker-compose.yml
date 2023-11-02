@@ -98,6 +98,8 @@ services:
       - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
 
   auth:
+    networks:
+      - supa-network
     container_name: supabase-auth
     image: supabase/gotrue:v2.99.0
     depends_on:
@@ -157,6 +159,8 @@ services:
       GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM}
 
   rest:
+    networks:
+      - supa-network
     container_name: supabase-rest
     image: postgrest/postgrest:v11.2.0
     depends_on:
@@ -177,6 +181,8 @@ services:
     command: "postgrest"
 
   realtime:
+    networks:
+      - supa-network
     container_name: realtime-dev.supabase-realtime
     image: supabase/realtime:v2.10.1
     depends_on:
@@ -217,6 +223,8 @@ services:
       sh -c "/app/bin/migrate && /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)' && /app/bin/server"
 
   storage:
+    networks:
+      - supa-network
     container_name: supabase-storage
     image: supabase/storage-api:v0.40.4
     depends_on:
@@ -273,6 +281,8 @@ services:
       - ./volumes/storage:/var/lib/storage:z
 
   imgproxy:
+    networks:
+      - supa-network
     container_name: supabase-imgproxy
     image: darthsim/imgproxy:v3.8.0
     healthcheck:
@@ -289,6 +299,8 @@ services:
       - ./volumes/storage:/var/lib/storage:z
 
   meta:
+    networks:
+      - supa-network
     container_name: supabase-meta
     image: supabase/postgres-meta:v0.68.0
     depends_on:
@@ -307,6 +319,8 @@ services:
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
 
   functions:
+    networks:
+      - supa-network
     container_name: supabase-edge-functions
     image: supabase/edge-runtime:v1.22.3
     restart: unless-stopped
@@ -382,6 +396,8 @@ services:
 
   # Comment out everything below this point if you are using an external Postgres database
   db:
+    networks:
+      - supa-network
     container_name: supabase-db
     image: supabase/postgres:15.1.0.117
     healthcheck:
@@ -422,6 +438,8 @@ services:
       - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
 
   vector:
+    networks:
+      - supa-network
     container_name: supabase-vector
     image: timberio/vector:0.28.1-alpine
     healthcheck:
