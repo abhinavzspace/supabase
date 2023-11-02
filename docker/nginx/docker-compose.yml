@@ -1,0 +1,26 @@
+version: "3.8"
+
+networks:
+  minio-network:
+    external: true
+  supa-network:
+    external: true
+
+services:
+  nginx:
+    image: "jc21/nginx-proxy-manager:latest"
+    restart: unless-stopped
+    ports:
+      # These ports are in format <host-port>:<container-port>
+      - "80:80" # Public HTTP Port
+      - "443:443" # Public HTTPS Port
+      - "81:81" # Admin Web Port
+    volumes:
+      - ./nginx-data:/data
+      - ./nginx-letsencrypt:/etc/letsencrypt
+      - ./nginx-snippets:/snippets:ro
+    environment:
+      TZ: "Asia/Kolkata" # Specify a timezone to use Etc/UTC by default
+    networks:
+      - minio-network
+      - supa-network
