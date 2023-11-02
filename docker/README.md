@@ -5,4 +5,16 @@ This is a minimal Docker Compose setup for self-hosting Supabase. Follow the ste
 
 # DEPLOYMENT STEPS
 
-`docker network create minio-network && docker network create supa-network`
+## updating
+
+`docker compose restart`
+
+## uninstalling all
+
+```
+# Stop docker and remove volumes:
+docker compose down -v
+
+# Remove Postgres data:
+rm -rf volumes/db/data/
+```
