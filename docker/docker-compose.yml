@@ -25,7 +25,7 @@ services:
 
   studio:
     container_name: supabase-studio
-    image: supabase/studio:20231023-7e2cd92
+    image: supabase/studio:20230921-d657f29   # TODO: Using previous version
     restart: unless-stopped
     healthcheck:
       test:
