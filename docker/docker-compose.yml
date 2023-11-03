@@ -60,6 +60,8 @@ services:
       # NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
       # Uncomment to use Big Query backend for analytics
       NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
+    ports:
+      - ${STUDIO_PORT}:${STUDIO_PORT}/tcp
 
   kong:
     container_name: supabase-kong
